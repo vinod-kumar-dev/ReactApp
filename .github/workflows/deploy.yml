@@ -37,6 +37,8 @@ jobs:
           git checkout prod
           git pull origin prod
           # Build the Docker image
+          docker stop react-app-first
+          docker rm react-app-first
           docker build -t your-image-name:latest .
 
           # Remove old containers and images
