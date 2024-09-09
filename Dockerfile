@@ -15,8 +15,6 @@ COPY . .
 
 # Build the React app for production
 RUN npm run build
-# ls -l /app
-RUN ls -l /app
 
 # Step 2: Use an Nginx image to serve the build files
 FROM nginx:alpine
