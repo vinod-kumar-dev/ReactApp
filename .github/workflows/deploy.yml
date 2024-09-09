@@ -22,21 +22,29 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           # Create the app directory if it doesn't exist
-          mkdir -p /home/ubuntu/app
+           mkdir -p /home/ubuntu/app
 
         # Navigate to the app folder
-          cd /home/ubuntu/app || exit
-          
-          # Pull the latest code from GitHub
-          git pull origin prod
+        cd /home/ubuntu/app || exit
+        
+        # Log the current directory and list files
+        pwd
+        ls -la
 
-          # Build the Docker image
-          docker build -t your-image-name:latest .
+        # Pull the latest code from GitHub
+        git pull origin prod || { echo 'Git pull failed'; exit 1; }
 
-          # Remove old containers and images
-          docker container prune -f
-          docker image prune -f
+        # Build the Docker image
+        docker build -t your-image-name:latest . || { echo 'Docker build failed'; exit 1; }
 
-          # Run the Docker container
-          docker run -d --name react-app-first -p 80:80 your-image-name:latest
+        # Remove old containers and images
+        docker container prune -f
+        docker image prune -f
+
+        # Stop and remove old container if it exists
+        docker container stop react-app-first || true
+        docker container rm react-app-first || true
+
+        # Run the Docker container
+        docker run -d --name react-app-first -p 80:80 your-image-name:latest || { echo 'Docker run failed'; exit 1; }
         EOF
