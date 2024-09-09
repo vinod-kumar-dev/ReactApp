@@ -24,19 +24,16 @@ jobs:
           # Create the app directory if it doesn't exist
           mkdir -p /home/ubuntu/app
 
-          # Navigate to the directory where your Dockerfile will be used
-          cd /home/ubuntu/app
+        # Navigate to the app folder
+          cd /home/ubuntu/app || exit
+          
+          # Pull the latest code from GitHub
+          git pull origin prod
 
-          # Clone the latest version of your repository in the app directory
-          if [ -d ".git" ]; then
-            git pull origin prod
-          else
-            git clone https://github.com/vinod-kumar-dev/ReactApp .
-          fi
-          # Build the Docker image using the Dockerfile from the repository
+          # Build the Docker image
           docker build -t your-image-name:latest .
 
-          # Optionally, remove old containers or images
+          # Remove old containers and images
           docker container prune -f
           docker image prune -f
 
