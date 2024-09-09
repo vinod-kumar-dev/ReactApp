@@ -26,27 +26,22 @@ jobs:
 
           # Navigate to the app folder
           cd /home/ubuntu/app || exit
-
-          # Check if the .git directory exists
+          
+          # Clone the repository if not already present
           if [ ! -d ".git" ]; then
-            # Clone the repository if it's not already cloned
             git clone https://github.com/vinod-kumar-dev/ReactApp.git .
           fi
-
+          
           # Pull the latest code from GitHub
-          git pull origin prod || { echo 'Git pull failed'; exit 1; }
+          git pull --rebase # or --no-rebase or --ff-only based on your choice
 
           # Build the Docker image
-          docker build -t your-image-name:latest . || { echo 'Docker build failed'; exit 1; }
+          docker build -t your-image-name:latest .
 
           # Remove old containers and images
           docker container prune -f
           docker image prune -f
 
-          # Stop and remove old container if it exists
-          docker container stop react-app-first || true
-          docker container rm react-app-first || true
-
           # Run the Docker container
-          docker run -d --name react-app-first -p 80:80 your-image-name:latest || { echo 'Docker run failed'; exit 1; }
+          docker run -d --name react-app-first -p 80:80 your-image-name:latest
         EOF
