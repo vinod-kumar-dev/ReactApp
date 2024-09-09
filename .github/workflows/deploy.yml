@@ -28,8 +28,11 @@ jobs:
           cd /home/ubuntu/app
 
           # Clone the latest version of your repository in the app directory
-          git clone https://github.com/vinod-kumar-dev/ReactApp .
-
+          if [ -d ".git" ]; then
+            git pull origin prod
+          else
+            git clone https://github.com/vinod-kumar-dev/ReactApp .
+          fi
           # Build the Docker image using the Dockerfile from the repository
           docker build -t your-image-name:latest .
 
