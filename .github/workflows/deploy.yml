@@ -22,29 +22,31 @@ jobs:
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
           # Create the app directory if it doesn't exist
-           mkdir -p /home/ubuntu/app
+          mkdir -p /home/ubuntu/app
 
-        # Navigate to the app folder
-        cd /home/ubuntu/app || exit
-        
-        # Log the current directory and list files
-        pwd
-        ls -la
+          # Navigate to the app folder
+          cd /home/ubuntu/app || exit
 
-        # Pull the latest code from GitHub
-        git pull origin prod || { echo 'Git pull failed'; exit 1; }
+          # Check if the .git directory exists
+          if [ ! -d ".git" ]; then
+            # Clone the repository if it's not already cloned
+            git clone https://github.com/vinod-kumar-dev/ReactApp.git .
+          fi
 
-        # Build the Docker image
-        docker build -t your-image-name:latest . || { echo 'Docker build failed'; exit 1; }
+          # Pull the latest code from GitHub
+          git pull origin prod || { echo 'Git pull failed'; exit 1; }
 
-        # Remove old containers and images
-        docker container prune -f
-        docker image prune -f
+          # Build the Docker image
+          docker build -t your-image-name:latest . || { echo 'Docker build failed'; exit 1; }
 
-        # Stop and remove old container if it exists
-        docker container stop react-app-first || true
-        docker container rm react-app-first || true
+          # Remove old containers and images
+          docker container prune -f
+          docker image prune -f
 
-        # Run the Docker container
-        docker run -d --name react-app-first -p 80:80 your-image-name:latest || { echo 'Docker run failed'; exit 1; }
+          # Stop and remove old container if it exists
+          docker container stop react-app-first || true
+          docker container rm react-app-first || true
+
+          # Run the Docker container
+          docker run -d --name react-app-first -p 80:80 your-image-name:latest || { echo 'Docker run failed'; exit 1; }
         EOF
