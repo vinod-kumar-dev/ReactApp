@@ -46,5 +46,5 @@ jobs:
           docker image prune -f
 
           # Run the Docker container
-          docker run -d --name react-app-first -p 443:443 your-image-name:latest
+          docker run -d --name react-app-first -p 80:80 your-image-name:latest
         EOF
