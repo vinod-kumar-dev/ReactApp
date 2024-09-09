@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - prod
- 
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -18,19 +18,21 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.EC2_SSH }}
 
+    - name: Create directory and upload Dockerfile
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          mkdir -p /home/ubuntu/app
+        EOF
+
+        scp -o StrictHostKeyChecking=no Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/
+      # Ensure Dockerfile is uploaded to the EC2 instance
+
     - name: Deploy to EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          # Navigate to the directory where your Dockerfile is located (if necessary)
           cd /home/ubuntu/app
-
-          # Build the Docker image
           docker build -t your-image-name:latest .
-
-          # Optionally, remove old containers or images
           docker container prune -f
           docker image prune -f
-
-          # Run the Docker container
           docker run -d --name react-app-first -p 80:80 your-image-name:latest
         EOF
