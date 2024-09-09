@@ -33,8 +33,9 @@ jobs:
           fi
           
           # Pull the latest code from GitHub
-          git pull --rebase # or --no-rebase or --ff-only based on your choice
-
+          git fetch origin
+          git checkout prod
+          git pull origin prod
           # Build the Docker image
           docker build -t your-image-name:latest .
 
