@@ -1,0 +1,36 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+    - name: Deploy to EC2
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          # Navigate to the directory where your Dockerfile is located (if necessary)
+          cd /home/ubuntu/app
+
+          # Build the Docker image
+          docker build -t your-image-name:latest .
+
+          # Optionally, remove old containers or images
+          docker container prune -f
+          docker image prune -f
+
+          # Run the Docker container
+          docker run -d --name react-app-first -p 80:80 your-image-name:latest
+        EOF
