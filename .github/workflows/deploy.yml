@@ -11,28 +11,32 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4.1.7
+      uses: actions/checkout@v4
 
     - name: Set up SSH key
       uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.EC2_SSH }}
 
-    - name: Create directory and upload Dockerfile
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-          mkdir -p /home/ubuntu/app
-        EOF
-
-        scp -o StrictHostKeyChecking=no Dockerfile ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/app/
-      # Ensure Dockerfile is uploaded to the EC2 instance
-
     - name: Deploy to EC2
       run: |
         ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          # Create the app directory if it doesn't exist
+          mkdir -p /home/ubuntu/app
+
+          # Navigate to the directory where your Dockerfile will be used
           cd /home/ubuntu/app
+
+          # Clone the latest version of your repository in the app directory
+          git clone https://github.com/vinod-kumar-dev/ReactApp .
+
+          # Build the Docker image using the Dockerfile from the repository
           docker build -t your-image-name:latest .
+
+          # Optionally, remove old containers or images
           docker container prune -f
           docker image prune -f
+
+          # Run the Docker container
           docker run -d --name react-app-first -p 80:80 your-image-name:latest
         EOF
