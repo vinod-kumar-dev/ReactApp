@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from 'react';
-import { DataGrid, GridColDef,GridPaginationModel  } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridPaginationModel } from '@mui/x-data-grid';
 import { Container, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { getApi } from '../../ApiHandler';
@@ -7,8 +7,8 @@ import { apiBaseUrl } from '../../config';
 import { useWebSocket } from '../../WebsocketProvider';
 
 interface WebSocketMessage<T> {
-  Page: string;
-  Message: T;
+  page: string;
+  message: T;
 }
 
 interface User {
@@ -16,22 +16,33 @@ interface User {
   fName: string;
   lName: string;
   email: string;
-  role: string;
-  phone: string;
+  Role: string;
+  Phone: string;
 }
 
-const fetchUsers = async (): Promise<User[]> => {
+const fetchUsers = async () => {
   const url = `${apiBaseUrl}/api/user`;
-  return getApi<User[]>({ url });
+  try {
+    const { status, body } = await getApi<User[]>({ url });
+    if (status == 200) {
+      console.log(body);
+      return body;
+    } else {
+      return [];
+    }
+  } catch (error) {
+    console.error('Failed to fetch users:', error);
+    return []; 
+  }
 };
 
 const columns: GridColDef[] = [
-  { field: 'Id', headerName: 'ID', width: 90 },
-  { field: 'FName', headerName: 'First Name', width: 150 },
-  { field: 'LName', headerName: 'Last Name', width: 150 },
-  { field: 'Email', headerName: 'Email', width: 250 },
-  { field: 'Role', headerName: 'Role', width: 100 },
-  { field: 'Phone', headerName: 'Phone', width: 100 }
+  { field: 'id', headerName: 'ID', width: 90 },
+  { field: 'fName', headerName: 'First Name', width: 150 },
+  { field: 'lName', headerName: 'Last Name', width: 150 },
+  { field: 'email', headerName: 'Email', width: 250 },
+  { field: 'role', headerName: 'Role', width: 100 },
+  { field: 'phone', headerName: 'Phone', width: 100 }
 ];
 
 const UserComponent: FC = () => {
@@ -44,14 +55,14 @@ const UserComponent: FC = () => {
     page: 0,
     pageSize: 2,
   });
-  const handlePaginationModelChange = (model:GridPaginationModel) => {
+  const handlePaginationModelChange = (model: GridPaginationModel) => {
     setPaginationModel(model);
   };
   useEffect(() => {
     const getUsers = async () => {
       try {
         const usersData = await fetchUsers();
-        setUsers(usersData);
+        setUsers(usersData ?? []);
       } catch (err) {
         setError('Failed to fetch users');
       } finally {
@@ -63,40 +74,42 @@ const UserComponent: FC = () => {
   }, []);
 
   useEffect(() => {
+    if (loading) return;
     if (messages.length === 0) return;
-    
+
     console.log('Received WebSocket messages:', messages);
-    
+
     const updateUsers = () => {
       const newUsers = messages
-        .filter((msg) => msg.Page === 'user')
+        .filter((msg) => msg.page === 'user')
         .map((msg) => {
           // Assuming `msg.Message` has the properties you need
-          const user = msg.Message;
+          const user = msg.message;
           return {
-            id: user.Message.id, // Ensure the id property matches what the DataGrid expects
-            fName: user.Message.fName,
-            lName: user.Message.lName,
-            email: user.Message.email,
-            role: user.Message.role,
-            phone: user.Message.phone
+            id: user?.id, // Ensure the id property matches what the DataGrid expects
+            fName: user?.fName,
+            lName: user?.lName,
+            email: user?.email,
+            role: user?.role,
+            phone: user?.phone
           };
         });
-  
+
       setUsers((prevUsers) => {
+        console.log("Previous users:", prevUsers);
         const usersMap = new Map(prevUsers.map(user => [user.id, user]));
         newUsers.forEach(user => {
           usersMap.set(user.id, user); // Extract user data and update map
         });
         return Array.from(usersMap.values());
       });
-  
+
       console.log('Updated user list:', newUsers);
     };
-  
+
     updateUsers();
   }, [messages]);
-    if (loading) {
+  if (loading) {
     return <div>Loading...</div>;
   }
 
@@ -107,7 +120,7 @@ const UserComponent: FC = () => {
   const handleClick = () => {
     navigate('/adduser');
   };
-  
+
   return (
     <Container>
       <h1>Data Grid View</h1>
@@ -119,9 +132,9 @@ const UserComponent: FC = () => {
         </div>
         <div className="data-grid-container">
           <DataGrid rows={users} columns={columns}
-             paginationModel={paginationModel}
-             onPaginationModelChange={handlePaginationModelChange}
-             pagination />
+            paginationModel={paginationModel}
+            onPaginationModelChange={handlePaginationModelChange}
+            pagination />
         </div>
       </div>
     </Container>
